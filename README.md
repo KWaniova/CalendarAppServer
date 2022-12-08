@@ -3,9 +3,13 @@ Source: https://strawberry.rocks/docs
 // to launch
 python -m venv virtualenv
 source virtualenv/bin/activate
+pip install cryptography
+pip install sqlalchemy 'fastapi[all]' 'uvicorn[standard]'
 pip install 'strawberry-graphql[debug-server]'
 
-strawberry server schema
+<!-- strawberry server schema -->
+
+uvicorn main:app --reload
 
 ### exp_1
 
