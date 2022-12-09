@@ -3,7 +3,7 @@ from sqlalchemy import Column, String
 from sqlalchemy.sql.sqltypes import String, DateTime
 from sqlalchemy.sql import func
 import uuid
-import hashlib
+from utils.hash_password import hash_password
 
 
 class User(Base):
@@ -21,7 +21,8 @@ class User(Base):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = hashlib.md5(password.encode()).hexdigest()
+        self.password = hash_password(password)
+        print(hash_password(password) == self.password)
 
     def __repr__(self) -> str:
         return f"({self.id}) {self.first_name} {self.last_name} {self.email} {self.created_at}"

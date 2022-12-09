@@ -3,11 +3,16 @@ import strawberry
 from conn.db import conn
 from models.index import users
 
+from utils.get_user_by_email import get_user_by_email
+
 from type.types import ResponseSuccess
+from type.exceptions import CustomException
+
+from utils.hash_password import hash_password
 
 
 @strawberry.type
-class Me:
+class MyProfile:
     id: str
     first_name: str
     last_name: str
@@ -16,17 +21,21 @@ class Me:
     created_at: str
 
 
+def get_me() -> MyProfile:
+    return conn.execute(users.select().where(users.c.id == id)).fetchone()
+
+
 @strawberry.type
-class Query:
-    @strawberry.field
-    def me(self) -> Me:
-        return conn.execute(users.select().where(users.c.id == id)).fetchone()
+class TokenResp:
+    token: str
 
 
-@ strawberry.type
-class Mutation:
-    @ strawberry.mutation
-    def login(self, email: str, password: str) -> ResponseSuccess:
-        return ResponseSuccess(status=200, message="Authorization", data={
-            "token": '9387kjskdhfjshfjhskfhToken'
-        })
+def login(email: str, password: str) -> ResponseSuccess[TokenResp]:
+    user = get_user_by_email(email)
+    print("User ", user)
+    if not user:
+        raise CustomException(message="Not registered user.", status=401)
+    if hash_password(password) == user.password:
+        return ResponseSuccess[TokenResp](status=200, message="Authorization", data=TokenResp(token="triqhjakdsjkagjsdgjkahkjdsh"))
+
+    return ResponseSuccess[None](status=401, message="Unauthorized", data=None)

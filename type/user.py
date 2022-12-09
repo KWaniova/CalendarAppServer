@@ -25,8 +25,7 @@ def get_users() -> typing.List[User]:
     return conn.execute(users.select()).fetchall()
 
 
-async def create_user(first_name: str, last_name: str, email: str, password: str) -> ResponseSuccess:
-    print('akjdh')
+async def create_user(first_name: str, last_name: str, email: str, password: str) -> ResponseSuccess[None]:
     userObj = UserType(first_name=first_name, last_name=last_name,
                        email=email, password=password)
     print(userObj)
@@ -37,16 +36,16 @@ async def create_user(first_name: str, last_name: str, email: str, password: str
     # except:
     #     raise HTTPException(status_code=500, detail="Problem")
 
-    return ResponseSuccess(status=201, message="created", data=None)
+    return ResponseSuccess[None](status=201, message="created", data=None)
 
 
-def update_user(id: str, first_name: str, last_name: str, email: str) -> ResponseSuccess:
+def update_user(id: str, first_name: str, last_name: str, email: str) -> ResponseSuccess[None]:
     result = conn.execute(users.update().where(users.c.id == id), {
         "first_name": first_name,
         "last_name": last_name,
         "email": email,
     })
-    return ResponseSuccess(status=201, message=str(result.rowcount) + " Row(s) updated", data=None)
+    return ResponseSuccess[None](status=201, message=str(result.rowcount) + " Row(s) updated", data=None)
 
 
 def delete_user(id: int) -> bool:

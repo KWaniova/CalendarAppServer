@@ -1,13 +1,9 @@
 from fastapi import APIRouter
 
 from type.schema import Mutation, Query
-from type.authorization import Mutation as AuthorizationMut, Query as AuthrorizationQuery
 from strawberry.asgi import GraphQL
 import strawberry
-import typing
 
-from functools import cached_property
-from strawberry.fastapi import BaseContext, GraphQLRouter
 
 user = APIRouter()
 
