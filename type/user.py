@@ -2,7 +2,6 @@ import typing
 import strawberry
 from conn.db import conn, engine
 from models.index import users, session
-from strawberry.types import Info
 from models.user import User as UserType
 from type.types import ResponseSuccess
 
@@ -13,15 +12,14 @@ class User:
     first_name: str
     last_name: str
     email: str
-    password: str
     created_at: str
 
 
-def get_user(id: str) -> User:
+def get_user(auth: str, id: str) -> User:
     return conn.execute(users.select().where(users.c.id == id)).fetchone()
 
 
-def get_users() -> typing.List[User]:
+def get_users(auth: str) -> typing.List[User]:
     return conn.execute(users.select()).fetchall()
 
 
@@ -29,18 +27,14 @@ async def create_user(first_name: str, last_name: str, email: str, password: str
     userObj = UserType(first_name=first_name, last_name=last_name,
                        email=email, password=password)
     print(userObj)
-    # try:
     with session:
         session.add(userObj)
         session.commit()
-    # except:
-    #     raise HTTPException(status_code=500, detail="Problem")
-
     return ResponseSuccess[None](status=201, message="created", data=None)
 
 
 def update_user(id: str, first_name: str, last_name: str, email: str) -> ResponseSuccess[None]:
-    result = conn.execute(users.update().where(users.c.id == id), {
+    result = conn.execute(users.update().where(users.c.id == id), {  # TODO: DTO???
         "first_name": first_name,
         "last_name": last_name,
         "email": email,
