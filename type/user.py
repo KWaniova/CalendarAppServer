@@ -1,23 +1,35 @@
 import typing
 import strawberry
-from conn.db import conn
-from conn.db import session
-from models.index import users
+from conn.db import conn, engine
+from models.index import users, session
 from strawberry.types import Info
-from schemas import user as UserSchemaObj
+from models.user import User as UserType
+from strawberry.http import GraphQLHTTPResponse
+
+from fastapi import FastAPI, HTTPException
+
+
+@strawberry.type
+class ResponseSuccess:
+    status: int
+    data: typing.Optional[str]
+
 
 @strawberry.type
 class User:
-    id: int
+    id: str
     first_name: str
     last_name: str
     email: str
     password: str
+
+
 @strawberry.type
 class Query:
     @strawberry.field
-    def user(id: int) -> User:
+    def user(id: str) -> User:
         return conn.execute(users.select().where(users.c.id == 1)).fetchone()
+
     @strawberry.field
     def users(self) -> typing.List[User]:
         # existss = session.query(User.id).filter_by(id=1).first()
@@ -26,24 +38,31 @@ class Query:
         # print(f"exists: ",exists)
         return conn.execute(users.select()).fetchall()
 
+
 @strawberry.type
 class Mutation:
     @strawberry.mutation
     def create_flavour(self, name: str, info: Info) -> bool:
         return True
+
     @strawberry.mutation
-    async def create_user(self, first_name: str, last_name: str, email: str, password: str, info: Info) -> int:
-        
-        user =  {
-            "first_name": first_name,
-            "last_name": last_name,
-            "email": email,
-            "password": password
-        }
-        result = conn.execute(users.insert(),user)
-        return int(result.inserted_primary_key[0])
+    async def create_user(self, first_name: str, last_name: str, email: str, password: str, info: Info) -> ResponseSuccess:
+        try:
+            with session:
+                userObj = UserType(first_name, last_name,
+                                   email=email, password=password)
+                session.add(userObj)
+                session.commit()
+        except:
+            raise HTTPException(status_code=500, detail="Problem")
+
+        return ResponseSuccess(status=200, data=None)
+
     @strawberry.mutation
-    def update_user(self, id:int, first_name: str, last_name: str, email: str, password: str, info: Info) -> str:
+    def update_user(self, id: int, first_name: str, last_name: str, email: str, password: str, info: Info) -> str:
+        userObj = UserType(first_name, last_name,
+                           email=email, password=password)
+
         result = conn.execute(users.update().where(users.c.id == id), {
             "first_name": first_name,
             "last_name": last_name,
@@ -52,9 +71,20 @@ class Mutation:
         })
         print(result. returns_rows)
         return str(result.rowcount) + " Row(s) updated"
+        # try:
+        #     with session:
+        #         userObj = UserType(first_name, last_name,
+        #                            email=email, password=password)
+        #         items = session.query(UserType).filter(UserType.id == id)
+        #         print(items)
+        #         session.update({UserType.name: "NAME"})
+        #         session.commit()
+        # except:
+        #     raise HTTPException(status_code=500, detail="Problem")
+
+        # return ResponseSuccess(status=200, data=None)
+
     @strawberry.mutation
     def delete_user(self, id: int) -> bool:
         result = conn.execute(users.delete().where(users.c.id == id))
         return result.rowcount > 0
-    
-    
