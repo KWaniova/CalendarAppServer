@@ -21,7 +21,6 @@ class Query:
 
 @ strawberry.type
 class Mutation:
-
     @strawberry.mutation
     def login(self, email: str, password: str) -> ResponseSuccess[TokenResp]:
         return login(email, password)
@@ -39,6 +38,7 @@ class Mutation:
         id = authorized_user(auth)  # can be stored in session context???
         return update_user(id, first_name, last_name, email)
 
-    @ strawberry.mutation
-    def delete_user(self, id: int) -> bool:
+    @ strawberry.mutation(permission_classes=[IsAuthenticated])
+    def delete_me(self, auth, id: int) -> bool:
+        id = authorized_user(auth)  # can be stored in session context???
         return delete_user(id)
