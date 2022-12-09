@@ -1,9 +1,9 @@
 from conn.db import Base
-from sqlalchemy import Table, Column, Integer, String
-from sqlalchemy.sql.sqltypes import Integer, String, DateTime
+from sqlalchemy import Column, String
+from sqlalchemy.sql.sqltypes import String, DateTime
 from sqlalchemy.sql import func
 import uuid
-from datetime import datetime
+import hashlib
 
 
 class User(Base):
@@ -21,17 +21,10 @@ class User(Base):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
+        self.password = hashlib.md5(password.encode()).hexdigest()
 
     def __repr__(self) -> str:
         return f"({self.id}) {self.first_name} {self.last_name} {self.email} {self.created_at}"
 
 
 users = User.__table__
-# users = Table('users', meta,
-#     Column('id', Integer, primary_key=True, autoincrement=True),
-#     Column('first_name', String(50)),
-#     Column('last_name', String(50)),
-#     Column('email', String(50)),
-#     Column('password', String(50)),
-# )

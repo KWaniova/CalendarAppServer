@@ -4,6 +4,5 @@ from conn.db import Base, engine
 from sqlalchemy.orm import Session
 
 
-# meta.create_all(engine)
 Base.metadata.create_all(engine)
 session = Session(bind=engine)
