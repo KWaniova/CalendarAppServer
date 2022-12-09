@@ -3,6 +3,7 @@ from sqlalchemy import Table, Column, Integer, String
 from sqlalchemy.sql.sqltypes import Integer, String, DateTime
 from sqlalchemy.sql import func
 import uuid
+from datetime import datetime
 
 
 class User(Base):
@@ -13,7 +14,7 @@ class User(Base):
     last_name = Column('last_name', String(50))
     email = Column('email', String(50))
     password = Column('password', String(50))
-    # created_at = Column(DateTime(), server_default=func.now())
+    created_at = Column(DateTime(), server_default=func.now())
 
     def __init__(self, first_name, last_name, email, password):
         self.id = str(uuid.uuid4())
@@ -23,7 +24,7 @@ class User(Base):
         self.password = password
 
     def __repr__(self) -> str:
-        return f"({self.id}) {self.first_name} {self.last_name} {self.email}"
+        return f"({self.id}) {self.first_name} {self.last_name} {self.email} {self.created_at}"
 
 
 users = User.__table__
