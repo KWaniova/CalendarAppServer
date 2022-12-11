@@ -18,6 +18,13 @@ class Query:
     def me(self, auth: str) -> MyProfile:
         return get_me(token=auth)
 
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connections(self, auth: str, id: str) -> typing.Optional[typing.List[typing.Union[ConnectionBase, ConnectedUser]]]:
+        authorized_user_id = authorized_user(auth)
+        if authorized_user_id == id:
+            return get_my_connections(id)
+        return None
+
 
 @ strawberry.type
 class Mutation:
@@ -39,6 +46,15 @@ class Mutation:
         return update_user(id, first_name, last_name, email)
 
     @ strawberry.mutation(permission_classes=[IsAuthenticated])
-    def delete_me(self, auth, id: int) -> bool:
+    def delete_me(self, auth: str, id: int) -> bool:
         id = authorized_user(auth)  # can be stored in session context???
         return delete_user(id)
+
+    @ strawberry.mutation(permission_classes=[IsAuthenticated])
+    def add_connection(self, auth: str, target_user_id: str) -> bool:
+        id = authorized_user(auth)  # can be stored in session context???
+        return add_connection(source_user_id=id, target_user_id=target_user_id)
+
+
+# TODO: connections -> user detail for friend is different than for not friend
+# events

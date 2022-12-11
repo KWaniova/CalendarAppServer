@@ -8,7 +8,7 @@ from graphql.error.graphql_error import format_error as format_graphql_error
 
 
 class CustomException(Exception):
-    def __init__(self, message: str, status: int):
+    def __init__(self, message: str, status: int = None):
         self.message = message
         self.status = status
 

@@ -11,6 +11,7 @@ from type.exceptions import CustomException
 
 from utils.hash_password import hash_password
 from sqlalchemy import *
+from type.connection import *
 
 
 @strawberry.type
@@ -34,7 +35,7 @@ class TokenResp:
 
 
 def authorized_user(token):
-    user_id = session.execute(select(Token.id_user).where(
+    user_id = session.execute(select(Token.user_id).where(
         token == Token.token)).scalar()
     if not token:
         raise CustomException(message="Unauthorized user!", status=401)
@@ -47,7 +48,7 @@ def login(email: str, password: str) -> ResponseSuccess[TokenResp]:
         raise CustomException(message="Not registered user.", status=401)
     if hash_password(password) == user.password:
         token_obj = session.execute(select(Token).where(
-            user.id == Token.id_user)).scalar()
+            user.id == Token.user_id)).scalar()
         if not token_obj:
             token_obj = Token(password=user.password, id=user.id)
             session.add(token_obj)

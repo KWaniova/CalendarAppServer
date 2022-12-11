@@ -9,16 +9,16 @@ from models.index import User
 class Token(Base):
     __tablename__ = 'auth_data'
 
-    id_user = Column('id_user', ForeignKey(
+    user_id = Column('user_id', ForeignKey(
         "users.id", ondelete="CASCADE"), nullable=False)
     token = Column('token', String(40), primary_key=True)
 
     def __init__(self, id: str, password: str):
-        self.id_user = id
+        self.user_id = id
         self.token = get_token_string(password, id)
 
     def __repr__(self) -> str:
-        return f"({self.id_user}) {self.token}"
+        return f"({self.user_id}) {self.token}"
 
 
 auth_data = User.__table__

@@ -15,7 +15,7 @@ class IsAuthenticated(BasePermission):
         print("REq: ", kwargs)
 
         if "auth" in kwargs.keys():
-            isAuthorized = session.execute(select(Token.id_user).where(
+            isAuthorized = session.execute(select(Token.user_id).where(
                 kwargs["auth"] == Token.token)).scalar()
             if isAuthorized:
                 return True
