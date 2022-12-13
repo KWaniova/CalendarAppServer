@@ -19,13 +19,9 @@ class Query:
         return get_me(token=auth)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def my_connections(self, auth: str):
+    def my_connections(self, auth: str) -> typing.Optional[ConnectionResponseObj]:
         authorized_user_id = authorized_user(auth)
         return get_my_connections(authorized_user_id)
-
-    @strawberry.field(permission_classes=[IsAuthenticated])
-    def connection(self, auth: str, user_id: str):
-        return get_connection(user_id)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def connections_list(self, auth: str, user_id: str) -> typing.Optional[ConnectionResponseObj]:

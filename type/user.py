@@ -15,6 +15,7 @@ class User:
     created_at: str
 
 
+# TODO: by different user type return different obj
 def get_user(auth: str, id: str) -> User:
     return conn.execute(users.select().where(users.c.id == id)).fetchone()
 
