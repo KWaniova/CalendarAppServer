@@ -4,8 +4,10 @@ from sqlalchemy.sql.sqltypes import String, DateTime, Integer
 from sqlalchemy.sql import func
 import uuid
 import enum
+import strawberry
 
 
+@strawberry.enum
 class ConnectionStatus(enum.IntEnum):
     to_accept = 1
     connected = 2

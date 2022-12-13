@@ -4,7 +4,7 @@ from strawberry.types import Info
 from type.user import *
 from type.types import ResponseSuccess
 from type.authorization import *
-from type.is_authenticated_class import IsAuthenticated
+from type.authentication_class import IsAuthenticated
 
 
 @strawberry.type
@@ -19,11 +19,20 @@ class Query:
         return get_me(token=auth)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def connections(self, auth: str, id: str) -> typing.Optional[typing.List[typing.Union[ConnectionBase, ConnectedUser]]]:
+    def my_connections(self, auth: str):
         authorized_user_id = authorized_user(auth)
-        if authorized_user_id == id:
-            return get_my_connections(id)
-        return None
+        return get_my_connections(authorized_user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connection(self, auth: str, user_id: str):
+        return get_connection(user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connections_list(self, auth: str, user_id: str) -> typing.Optional[ConnectionResponseObj]:
+        authorized_user_id = authorized_user(auth)
+        if authorized_user_id == user_id:
+            return get_my_connections(user_id)
+        return get_user_connections(user_id)
 
 
 @ strawberry.type
@@ -54,6 +63,10 @@ class Mutation:
     def add_connection(self, auth: str, target_user_id: str) -> bool:
         id = authorized_user(auth)  # can be stored in session context???
         return add_connection(source_user_id=id, target_user_id=target_user_id)
+
+    @strawberry.mutation(permission_classes=[IsAuthenticated])
+    def connection_action(self, auth: str, connection_id: str, action: ConnectionAction) -> bool:
+        return connection_action(connection_id, action)
 
 
 # TODO: connections -> user detail for friend is different than for not friend

@@ -1,9 +1,12 @@
 from conn.db import Base
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import String, DateTime
 from sqlalchemy.sql import func
 import uuid
 from utils.hash_password import hash_password
+
+from models.connection import connections
 
 
 class User(Base):
@@ -12,7 +15,7 @@ class User(Base):
     id = Column('id', String(40), primary_key=True)
     first_name = Column('first_name', String(50))
     last_name = Column('last_name', String(50))
-    email = Column('email', String(50))
+    email = Column('email', String(50), unique=True)
     password = Column('password', String(50))
     created_at = Column(DateTime(), server_default=func.now())
 
