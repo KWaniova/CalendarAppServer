@@ -1,17 +1,16 @@
-import typing
 import strawberry
 from conn.db import conn
-from models.index import users, Token, session, auth_data
+from models.index import users, Token, session
 
 
 from utils.get_user_by_email import get_user_by_email
 
 from type.types import ResponseSuccess
-from type.exceptions import CustomException
+from schemas.exceptions import CustomException
 
 from utils.hash_password import hash_password
 from sqlalchemy import *
-from type.connection import *
+from schemas.connection import *
 
 
 @strawberry.type

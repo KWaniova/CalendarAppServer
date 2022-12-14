@@ -1,10 +1,18 @@
 import typing
 import strawberry
 from strawberry.types import Info
-from type.user import *
+from schemas.user import *
 from type.types import ResponseSuccess
-from type.authorization import *
-from type.authentication_class import IsAuthenticated
+from schemas.authorization import *
+from schemas.authentication_class import IsAuthenticated
+from type.user import UserInput
+
+
+class CreateEventInput:
+    title: str
+    description: str
+    type: str  # TODO enum
+    created_at: str
 
 
 @strawberry.type
@@ -42,8 +50,8 @@ class Mutation:
         return logout(token=auth)
 
     @ strawberry.mutation
-    async def create_user(self, first_name: str, last_name: str, email: str, password: str, info: Info) -> ResponseSuccess[None]:
-        return await create_user(first_name, last_name, email, password)
+    async def create_user(self, user: UserInput, info: Info) -> ResponseSuccess[None]:
+        return await create_user(user)
 
     @ strawberry.mutation(permission_classes=[IsAuthenticated])
     def edit(self, auth: str, first_name: str, last_name: str, email: str) -> ResponseSuccess[None]:
@@ -64,6 +72,11 @@ class Mutation:
     def connection_action(self, auth: str, connection_id: str, action: ConnectionAction) -> bool:
         return connection_action(connection_id, action)
 
+    def create_event(self, auth: str, event: CreateEventInput) -> bool:
+        return True
+
 
 # TODO: connections -> user detail for friend is different than for not friend
 # events
+
+# TODO: add proper request response

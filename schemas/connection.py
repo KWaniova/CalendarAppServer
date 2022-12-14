@@ -2,8 +2,7 @@ import typing
 import strawberry
 from models.index import connections, session, Connection
 from models.user import User as UserType
-from type.types import ResponseSuccess
-from type.exceptions import CustomException
+from schemas.exceptions import CustomException
 
 from models.connection import Connection, ConnectionStatus
 
