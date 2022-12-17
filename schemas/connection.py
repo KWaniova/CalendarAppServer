@@ -91,6 +91,7 @@ def get_my_connections(id) -> typing.Optional[ConnectionResponseObj]:
         query_target_connection_requests).fetchall()
     connection_requests_sent = session.execute(
         query_source_connection_requests).fetchall()
+    print(connections_full_1)
     return ConnectionResponseObj(connections=get_conn_list_from_rows([*connections_full_1, *connections_full_2]), connection_requests=get_conn_list_from_rows(connection_requests), connection_requests_sent=get_conn_list_from_rows(connection_requests_sent))
 
 
@@ -130,7 +131,6 @@ def add_connection(source_user_id: str, target_user_id: str):
 def connection_action(connection_id: str, action: ConnectionAction) -> bool:
     status = session.execute(select(Connection.status).where(
         Connection.id == connection_id)).scalar()
-    print("Status: ", status)
     if status == ConnectionStatus.to_accept:
         if action == ConnectionAction.ACCEPT:
             session.execute(update(Connection).where(Connection.id ==

@@ -6,8 +6,6 @@ from sqlalchemy.sql import func
 import uuid
 from utils.hash_password import hash_password
 
-from models.connection import connections
-
 
 class User(Base):
     __tablename__ = 'users'

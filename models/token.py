@@ -3,7 +3,7 @@ from sqlalchemy import Column, String
 from sqlalchemy.sql.sqltypes import String
 from utils.get_token_string import get_token_string
 from sqlalchemy import ForeignKey
-from models.index import User
+from models.user import User
 
 
 class Token(Base):
