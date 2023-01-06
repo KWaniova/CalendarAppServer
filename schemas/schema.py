@@ -18,6 +18,11 @@ class Query:
         permission_classes=[IsAuthenticated], resolver=get_users)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
+    def connections(self, auth: str) -> ConnectionResponse:
+        authorized_user_id = authorized_user(auth)
+        return get_user_connections(authorized_user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def me(self, auth: str) -> MyProfile:
         return get_me(token=auth)
 
@@ -25,11 +30,6 @@ class Query:
     def get_not_connected_users(self, auth: str) -> typing.List[NotConnectedUser]:
         authorized_user_id = authorized_user(auth)
         return get_not_connected_users_to_user(authorized_user_id)
-
-    @strawberry.field(permission_classes=[IsAuthenticated])
-    def connections(self, auth: str) -> ConnectionResponse:
-        authorized_user_id = authorized_user(auth)
-        return get_user_connections(authorized_user_id)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def connection_requests(self, auth: str) -> ConnectionResponse:
@@ -109,7 +109,7 @@ class Mutation:
         id = authorized_user(auth)  # can be stored in session context???
         return update_event(id, event=event)
 
-    @ strawberry.mutation(permission_classes=[IsAuthenticated])
+    @strawberry.mutation(permission_classes=[IsAuthenticated])
     def delete_event(self, auth: str, id: str) -> bool:
         userID = authorized_user(auth)  # can be stored in session context???
         if userID:

@@ -36,7 +36,6 @@ class EventInputUpdate:
 
 
 def create_event(user_id: str, type: EventTypeEnum, event: EventInput) -> ResponseSuccess[str]:
-    print("create event:::: ")
 
     if type == EventTypeEnum.SHARED:
         # TODO: if time remains
@@ -44,10 +43,8 @@ def create_event(user_id: str, type: EventTypeEnum, event: EventInput) -> Respon
 
     event = Event(user_id=user_id, type=type.value, title=event.title,
                   description=event.description, start_date=datetime.datetime.fromisoformat(event.start_date), end_date=datetime.datetime.fromisoformat(event.end_date))
-    print("EVENT:::: ", event)
     session.add(event)
     session.commit()
-    print("Executed")
     return ResponseSuccess[None](status=201, message="created", data=event.id)
 
 
@@ -74,6 +71,7 @@ def get_events_list_from_rows(rows) -> typing.List[MyEvent]:
     tab: typing.List[MyEvent] = []
     for row in rows:
         event: EventMapper = row[0]
+        print("EVENT ", event)
         my_event = MyEvent(id=event.id, user_id=event.user_id, title=event.title, description=event.description,
                            type=event.type, start_date=event.start_date, end_date=event.end_date)
         tab.append(my_event)
@@ -91,8 +89,6 @@ def get_my_events(id: str, from_date: str, to_date: str) -> typing.List[MyEvent]
             Event.user_id == connection.user_id).filter(Event.type == EventTypeEnum.PUBLIC.value)).fetchall()
         print("connection_events: ", connection_events)
         events.extend(connection_events)
-    # get all public events of my connections
-
     return get_events_list_from_rows(events)
 
 
