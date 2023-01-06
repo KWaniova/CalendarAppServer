@@ -12,9 +12,9 @@ graphql_app = GraphQLRouter(schema)
 app = FastAPI()
 
 
-# app.add_middleware(
-#     CORSMiddleware, allow_headers=["*"], allow_origins=["http://127.0.0.1:8000/"], allow_origin_regex="https?://(localhost|127\.0\.0\.1):\d+."
-# )
+app.add_middleware(
+    CORSMiddleware, allow_headers=["*"], allow_origins=["http://127.0.0.1:8000/"], allow_origin_regex="https?://(localhost|127\.0\.0\.1):\d+."
+)
 
 origins = [
     "http://localhost:3000",
@@ -32,7 +32,3 @@ app.add_middleware(
 
 
 app.include_router(graphql_app, prefix="/graphql")
-
-
-# app.include_router(app_route)
-# app.add_websocket_route("/graphql", graphql_app)

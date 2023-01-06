@@ -1,9 +1,6 @@
 import strawberry
 
 
-import datetime
-
-
 @strawberry.input
 class EventInput:
     title: str

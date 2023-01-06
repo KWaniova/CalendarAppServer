@@ -10,6 +10,8 @@ from sqlalchemy import *
 from sqlalchemy.orm import *
 from enum import Enum
 
+from type.types import Response
+
 
 @strawberry.enum
 class ConnectionAction(Enum):
@@ -24,6 +26,7 @@ class ConnectionBase:
     user_id: str
     first_name: str
     last_name: str
+    created_at: str
     connection_status: typing.Optional[ConnectionStatus]
 
 
@@ -32,6 +35,7 @@ class UserBase(UserType):
     id: str
     first_name: str
     last_name: str
+    created_at: str
 
 
 @strawberry.type
@@ -39,6 +43,11 @@ class ConnectionResponseObj:
     connections: typing.List[ConnectionBase]
     connection_requests: typing.Optional[typing.List[ConnectionBase]] = None
     connection_requests_sent: typing.Optional[typing.List[ConnectionBase]] = None
+
+
+@strawberry.type
+class ConnectionResponse:
+    connections: typing.List[ConnectionBase] = None
 
 
 @strawberry.type
@@ -62,16 +71,49 @@ class ConnectedUser:
     # events: typing.List[ConnectionBase] #TODO
 
 
-def get_conn_list_from_rows(rows) -> ConnectionBase:
+def get_conn_list_from_rows(rows) -> typing.List[ConnectionBase]:
     tab: typing.List[ConnectionBase] = []
     for row in rows:
         print("ROW: ", row)
         conn_user: UserBase = row[0]
-        tab.append(ConnectionBase(user_id=conn_user.id, first_name=conn_user.first_name,
+        tab.append(ConnectionBase(user_id=conn_user.id, created_at=conn_user.created_at, first_name=conn_user.first_name,
                    last_name=conn_user.last_name, id=row[1], connection_status=row[2]))
     return tab
 
-# TODO: - special type for connections that are connected or not
+
+def get_not_connected_users_to_user(id: str):
+    query = select(UserBase).where(UserType.id != id).where(
+        not_(exists().where(Connection.target_user_id == id).where(Connection.source_user_id == UserType.id))).where(not_(exists().where(Connection.source_user_id == id).where(Connection.target_user_id == UserType.id)))
+    not_connected_users = session.execute(query).fetchall()
+    if not not_connected_users:
+        return []
+
+    return [user[0] for user in not_connected_users]
+
+
+def get_user_connection_requests(id: str):
+    query_target_connection_requests = select(UserBase, Connection.id, Connection.status).filter(
+        Connection.target_user_id == id).where(UserType.id == Connection.source_user_id).where(Connection.status == ConnectionStatus.to_accept)
+    connection_requests = session.execute(
+        query_target_connection_requests).fetchall()
+    print("connection_requests", connection_requests)
+    if not connection_requests:
+        return ConnectionResponse(connections=[])
+    return ConnectionResponse(connections=get_conn_list_from_rows(connection_requests))
+
+
+def get_user_connection_requests_sent(id: str):
+    query_source_connection_requests = select(UserBase, Connection.id, Connection.status).filter(
+        Connection.source_user_id == id).where(
+        Connection.target_user_id == UserType.id).where(Connection.status == ConnectionStatus.to_accept)
+    connection_requests_sent = session.execute(
+        query_source_connection_requests).fetchall()
+    print(connection_requests_sent)
+    print("ASKDKJA ", ConnectionResponse(
+        connections=get_conn_list_from_rows(connection_requests_sent)))
+    if not connection_requests_sent:
+        return ConnectionResponse(connections=[])
+    return ConnectionResponse(connections=get_conn_list_from_rows(connection_requests_sent))
 
 
 def get_my_connections(id) -> typing.Optional[ConnectionResponseObj]:
@@ -91,7 +133,8 @@ def get_my_connections(id) -> typing.Optional[ConnectionResponseObj]:
         query_target_connection_requests).fetchall()
     connection_requests_sent = session.execute(
         query_source_connection_requests).fetchall()
-    print(connections_full_1)
+    # print("CONNECTIONS: ", ConnectionResponseObj(connections=get_conn_list_from_rows([*connections_full_1, *connections_full_2]), connection_requests=get_conn_list_from_rows(
+    #     connection_requests), connection_requests_sent=get_conn_list_from_rows(connection_requests_sent)))
     return ConnectionResponseObj(connections=get_conn_list_from_rows([*connections_full_1, *connections_full_2]), connection_requests=get_conn_list_from_rows(connection_requests), connection_requests_sent=get_conn_list_from_rows(connection_requests_sent))
 
 
@@ -103,8 +146,10 @@ def get_user_connections(id: str):
         Connection.target_user_id == UserType.id).where(Connection.status == ConnectionStatus.connected)
     connections_full_1 = session.execute(query_target_connections).fetchall()
     connections_full_2 = session.execute(query_source_connections).fetchall()
-
-    return ConnectionResponseObj(connections=get_conn_list_from_rows([*connections_full_1, *connections_full_2]))
+    print("CONNECTIONS: ", [*connections_full_1, *connections_full_2])
+    result = get_conn_list_from_rows(
+        [*connections_full_1, *connections_full_2])
+    return ConnectionResponse(connections=result)
 
 
 def add_connection(source_user_id: str, target_user_id: str):
@@ -118,7 +163,6 @@ def add_connection(source_user_id: str, target_user_id: str):
     query = select(Connection.id).where(
         or_(and_(Connection.source_user_id == source_user_id, Connection.target_user_id == target_user_id), and_(Connection.source_user_id == target_user_id, Connection.target_user_id == source_user_id)))
     connection_exists = session.execute(query).scalar()
-
     if connection_exists:
         raise CustomException(message="Already connected!")
 

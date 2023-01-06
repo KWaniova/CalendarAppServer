@@ -5,6 +5,13 @@ from models.index import users, session
 from models.user import User as UserType
 from type.types import ResponseSuccess
 from type.user import UserInput
+from schemas.authorization import *
+from sqlalchemy.orm import *
+
+
+@strawberry.enum
+class UserConnectionType(Enum):
+    CONNECTED = "connected"
 
 
 @strawberry.type
@@ -18,6 +25,11 @@ class User:
 
 # TODO: by different user type return different obj
 def get_user(auth: str, id: str) -> User:
+    authorized_user_id = authorized_user(auth)
+    connections_query = select(Connection.id, Connection.status).filter(or_(Connection.target_user_id == authorized_user_id, Connection.source_user_id == authorized_user_id)
+                                                                        ).where(Connection.status == ConnectionStatus.connected).where(or_(Connection.target_user_id == id, Connection.source_user_id == id))
+    connections = session.execute(connections_query).fetchall()
+    print("FRIENDS: ", connections)
     return conn.execute(users.select().where(users.c.id == id)).fetchone()
 
 
@@ -46,4 +58,5 @@ def update_user(id: str, first_name: str, last_name: str, email: str) -> Respons
 
 def delete_user(id: int) -> bool:
     result = conn.execute(users.delete().where(users.c.id == id))
+
     return result.rowcount > 0

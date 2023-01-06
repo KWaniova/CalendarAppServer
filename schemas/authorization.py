@@ -31,6 +31,7 @@ def get_me(token: str) -> MyProfile:
 @strawberry.type
 class TokenResp:
     token: str
+    id: str
 
 
 def authorized_user(token):
@@ -52,12 +53,14 @@ def login(email: str, password: str) -> ResponseSuccess[TokenResp]:
             token_obj = Token(password=user.password, id=user.id)
             session.add(token_obj)
             session.commit()
-        return ResponseSuccess[TokenResp](status=200, message="Authorization", data=TokenResp(token=token_obj.token))
+        user_id = authorized_user(token_obj.token)
+        return ResponseSuccess[TokenResp](status=200, message="Authorization", data=TokenResp(token=token_obj.token, id=user_id))
 
     return ResponseSuccess[None](status=401, message="Unauthorized", data=None)
 
 
 def logout(token: str) -> ResponseSuccess[None]:
-    conn.execute(delete(Token).where(
+    session.execute(delete(Token).where(
         Token.token == token).execution_options(synchronize_session="fetch"))
+    session.commit()
     return ResponseSuccess[None](status=200, message="Logged out", data=None)

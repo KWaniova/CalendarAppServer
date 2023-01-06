@@ -22,9 +22,26 @@ class Query:
         return get_me(token=auth)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def my_connections(self, auth: str) -> typing.Optional[ConnectionResponseObj]:
+    def get_not_connected_users(self, auth: str) -> typing.List[NotConnectedUser]:
         authorized_user_id = authorized_user(auth)
-        return get_my_connections(authorized_user_id)
+        return get_not_connected_users_to_user(authorized_user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connections(self, auth: str) -> ConnectionResponse:
+        authorized_user_id = authorized_user(auth)
+        return get_user_connections(authorized_user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connection_requests(self, auth: str) -> ConnectionResponse:
+        authorized_user_id = authorized_user(auth)
+        return get_user_connection_requests(authorized_user_id)
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def connection_requests_sent(self, auth: str) -> ConnectionResponse:
+        authorized_user_id = authorized_user(auth)
+        sent = get_user_connection_requests_sent(authorized_user_id)
+        print("SENT: ", sent)
+        return sent
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def connections_list(self, auth: str, user_id: str) -> typing.Optional[ConnectionResponseObj]:
@@ -72,22 +89,31 @@ class Mutation:
     def connection_action(self, auth: str, connection_id: str, action: ConnectionAction) -> bool:
         return connection_action(connection_id, action)
 
-    @strawberry.mutation(permission_classes=[IsAuthenticated])
-    def create_shared_event(self, auth: str, event: EventInput, share_with: typing.Optional[typing.List[str]]) -> bool:
-        id = authorized_user(auth)  # can be stored in session context???
-        return create_event(id, type=EventTypeEnum.SHARED, event=event, shared_with_ids=share_with)
+    # @strawberry.mutation(permission_classes=[IsAuthenticated])
+    # def create_shared_event(self, auth: str, event: EventInput, share_with: typing.Optional[typing.List[str]]) -> bool:
+    #     id = authorized_user(auth)  # can be stored in session context???
+    #     return create_event(id, type=EventTypeEnum.SHARED, event=event, shared_with_ids=share_with)
 
     @strawberry.mutation(permission_classes=[IsAuthenticated])
-    def create_private_event(self, auth: str, event: EventInput) -> bool:
+    def create_private_event(self, auth: str, event: EventInput) -> ResponseSuccess[str]:
         id = authorized_user(auth)  # can be stored in session context???
         return create_event(id, type=EventTypeEnum.PRIVATE, event=event)
 
     @strawberry.mutation(permission_classes=[IsAuthenticated])
-    def create_public_event(self, auth: str, event: EventInput) -> bool:
+    def create_public_event(self, auth: str, event: EventInput) -> ResponseSuccess[str]:
         id = authorized_user(auth)  # can be stored in session context???
         return create_event(id, type=EventTypeEnum.PUBLIC, event=event)
 
+    @strawberry.mutation(permission_classes=[IsAuthenticated])
+    def update_event(self, auth: str, event: EventInputUpdate) -> ResponseSuccess[None]:
+        id = authorized_user(auth)  # can be stored in session context???
+        return update_event(id, event=event)
 
+    @ strawberry.mutation(permission_classes=[IsAuthenticated])
+    def delete_event(self, auth: str, id: str) -> bool:
+        userID = authorized_user(auth)  # can be stored in session context???
+        if userID:
+            return delete_event(userID, id)
 # TODO: connections -> user detail for friend is different than for not friend
 # events
 
