@@ -7,7 +7,6 @@ from schemas.authorization import *
 from schemas.events import *
 from schemas.authentication_class import IsAuthenticated
 from type.user import UserInput
-from type.event import EventInput
 
 
 @strawberry.type
@@ -51,7 +50,7 @@ class Query:
         return get_user_connections(user_id)
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def my_events(self, auth: str, from_date: str, to_date: str) -> typing.List[MyEvent]:
+    def my_events(self, auth: str, from_date: str, to_date: str) -> typing.List[Event]:
         authorized_user_id = authorized_user(auth)
         return get_my_events(id=authorized_user_id, from_date=from_date, to_date=to_date)
 
