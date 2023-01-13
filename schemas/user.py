@@ -40,7 +40,6 @@ def get_users(auth: str) -> typing.List[User]:
 async def create_user(user: UserInput) -> ResponseSuccess[None]:
     userObj = UserType(first_name=user.first_name, last_name=user.last_name,
                        email=user.email, password=user.password)
-    print(userObj)
     with session:
         session.add(userObj)
         session.commit()

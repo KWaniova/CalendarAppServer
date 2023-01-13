@@ -1,9 +1,9 @@
+from sqlalchemy import Column, String, ForeignKey
 from conn.db import Base
 from sqlalchemy import Column, String
 from sqlalchemy.sql.sqltypes import String
 from utils.get_token_string import get_token_string
 from sqlalchemy import ForeignKey
-from models.user import User
 
 
 class Token(Base):
@@ -21,4 +21,4 @@ class Token(Base):
         return f"({self.user_id}) {self.token}"
 
 
-auth_data = User.__table__
+auth_data = Token.__table__

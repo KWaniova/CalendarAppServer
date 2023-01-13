@@ -1,6 +1,5 @@
 from conn.db import Base
 from sqlalchemy import Column, String
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import String, DateTime
 from sqlalchemy.sql import func
 import uuid
@@ -15,7 +14,7 @@ class User(Base):
     last_name = Column('last_name', String(50))
     email = Column('email', String(50), unique=True)
     password = Column('password', String(50))
-    created_at = Column(DateTime(), server_default=func.now())
+    created_at = Column('created_at', DateTime(), server_default=func.now())
 
     def __init__(self, first_name, last_name, email, password):
         self.id = str(uuid.uuid4())

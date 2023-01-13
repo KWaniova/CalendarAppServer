@@ -1,5 +1,4 @@
 import typing
-import strawberry
 from models.index import Event
 from type.types import ResponseSuccess
 from schemas.exceptions import CustomException
@@ -7,9 +6,9 @@ from models.index import users, session
 
 from models.user import User as UserType
 
-
 from sqlalchemy import *
 from sqlalchemy.orm import *
+import strawberry
 from enum import Enum
 
 from type.event import EventInput
@@ -35,19 +34,6 @@ class EventInputUpdate:
     id: str
 
 
-def create_event(user_id: str, type: EventTypeEnum, event: EventInput) -> ResponseSuccess[str]:
-
-    if type == EventTypeEnum.SHARED:
-        # TODO: if time remains
-        return ResponseSuccess[None](status=201, message="created", data=None)
-
-    event = Event(user_id=user_id, type=type.value, title=event.title,
-                  description=event.description, start_date=datetime.datetime.fromisoformat(event.start_date), end_date=datetime.datetime.fromisoformat(event.end_date))
-    session.add(event)
-    session.commit()
-    return ResponseSuccess[None](status=201, message="created", data=event.id)
-
-
 @strawberry.type
 class MyEvent:
     title: str
@@ -67,11 +53,23 @@ class EventMapper(Event):
     type: EventTypeEnum
 
 
+def create_event(user_id: str, type: EventTypeEnum, event: EventInput) -> ResponseSuccess[str]:
+
+    if type == EventTypeEnum.SHARED:
+        # TODO: if time remains
+        return ResponseSuccess[None](status=201, message="created", data=None)
+
+    event = Event(user_id=user_id, type=type.value, title=event.title,
+                  description=event.description, start_date=datetime.datetime.fromisoformat(event.start_date), end_date=datetime.datetime.fromisoformat(event.end_date))
+    session.add(event)
+    session.commit()
+    return ResponseSuccess[None](status=201, message="created", data=event.id)
+
+
 def get_events_list_from_rows(rows) -> typing.List[MyEvent]:
     tab: typing.List[MyEvent] = []
     for row in rows:
         event: EventMapper = row[0]
-        print("EVENT ", event)
         my_event = MyEvent(id=event.id, user_id=event.user_id, title=event.title, description=event.description,
                            type=event.type, start_date=event.start_date, end_date=event.end_date)
         tab.append(my_event)
@@ -110,7 +108,6 @@ def update_event(id: str, event: EventInputUpdate) -> ResponseSuccess[None]:
 def delete_event(user_id: str, id: str) -> bool:
     event = session.execute(
         events.select().where(events.c.id == id)).fetchone()
-    print("EEVV: ", event)
     if event and event.user_id == user_id:
         result = session.execute(events.delete().where(events.c.id == id))
         return result.rowcount > 0
