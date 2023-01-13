@@ -106,7 +106,7 @@ class Mutation:
     @strawberry.mutation(permission_classes=[IsAuthenticated])
     def update_event(self, auth: str, event: EventInputUpdate) -> ResponseSuccess[None]:
         id = authorized_user(auth)  # can be stored in session context???
-        return update_event(id, event=event)
+        return update_event(id, event_to_update=event)
 
     @strawberry.mutation(permission_classes=[IsAuthenticated])
     def delete_event(self, auth: str, id: str) -> bool:

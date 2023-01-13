@@ -3,7 +3,6 @@ from models.index import Event as EventModel
 from type.types import ResponseSuccess
 from models.index import users, session
 
-from models.user import User as UserType
 
 from sqlalchemy import *
 from sqlalchemy.orm import *
@@ -113,6 +112,17 @@ class EventsRepository(EventsRepository):
         listing_model = self.session.query(EventModel).get(entity.id)
         self.session.delete(listing_model)
 
+    def update(self, entity: Event):
+        self._check_not_removed(entity)
+        result = session.execute(events.update().where(events.c.id == entity.id), {
+            "title": entity.title,
+            "description": entity.description,
+            "type": entity.type,
+            "start_date": entity.date_range.start_date,
+            "end_date": entity.date_range.end_date
+        })
+        return result
+
     def get_by_id(self, id):
         instance = self.session.query(EventModel).get(id)
         return self._get_entity(instance, map_event_model_to_event)
@@ -120,6 +130,16 @@ class EventsRepository(EventsRepository):
     def get_by_user_id(self, user_id):
         instances = self.session.query(EventModel).filter(
             EventModel.user_id == user_id)
+        return self._get_entities(instances, map_event_model_to_event)
+
+    def get_by_user_id_and_date(self, user_id, date_range: DateRange):
+        instances = self.session.query(EventModel).filter(
+            EventModel.user_id == user_id).filter(EventModel.start_date >= date_range.start_date).filter(EventModel.end_date <= date_range.end_date)
+        return self._get_entities(instances, map_event_model_to_event)
+
+    def get_by_user_id_and_type(self, user_id, type: EventTypeEnum):
+        instances = self.session.query(EventModel).filter(
+            EventModel.user_id == user_id).filter(EventModel.type == type.value)
         return self._get_entities(instances, map_event_model_to_event)
 
     def _check_not_removed(self, entity):
@@ -139,68 +159,63 @@ class EventsRepository(EventsRepository):
         return entity
 
     def _get_entities(self, instances, mapper_func):
-        entities: typing.List[Event] = []
+        entities = []
         for instance in instances:
             entity = self._get_entity(instance, mapper_func)
             entities.append(entity)
         return entities
 
 
-def get_events_list_from_rows(rows) -> typing.List[Event]:
-    tab: typing.List[Event] = []
-    for row in rows:
-        event: EventModel = row[0]
-        my_event = map_event_model_to_event(event)
-        tab.append(my_event)
-    return tab
+def map_event_input_to_entity(event: EventInput) -> Event:
+    date_range = DateRange(start_date=datetime.datetime.fromisoformat(
+        event.start_date), end_date=datetime.datetime.fromisoformat(event.end_date))
+    event = Event(id=None, user_id=None, type=EventTypeEnum.PRIVATE.value, title=event.title,
+                  description=event.description, date_range=date_range,)
+    return event
 
 
 def create_event(user_id: str, type: EventTypeEnum, event: EventInput) -> ResponseSuccess[str]:
-    date_range = DateRange(start_date=datetime.datetime.fromisoformat(
-        event.start_date), end_date=datetime.datetime.fromisoformat(event.end_date))
-    event = Event(id=None, user_id=user_id, type=type.value, title=event.title,
-                  description=event.description, date_range=date_range,)
+    event = map_event_input_to_entity(event)
+    event.user_id = user_id
+    event.type = type.value
 
-    event = map_event_to_event_model(event)
-
-    session.add(event)
+    repository = EventsRepository(session)
+    repository.add(event)
     session.commit()
     return ResponseSuccess[None](status=201, message="created", data=event.id)
 
 
 def get_my_events(id: str, from_date: str, to_date: str) -> typing.List[Event]:
-    query_events = session.query(EventModel).filter(
-        EventModel.user_id == id).where(EventModel.user_id == UserType.id).filter(or_(EventModel.start_date >= datetime.datetime.fromisoformat(from_date), EventModel.end_date <= datetime.datetime.fromisoformat(to_date)))
-    events = session.execute(
-        query_events).fetchall()
+    repository = EventsRepository(session)
+    date_range = DateRange(start_date=datetime.datetime.fromisoformat(
+        from_date), end_date=datetime.datetime.fromisoformat(to_date))
+    events = repository.get_by_user_id_and_date(id, date_range)
     conn = get_user_connections(id)
     for connection in conn.connections:
-        connection_events = session.execute(session.query(EventModel).filter(
-            EventModel.user_id == connection.user_id).filter(EventModel.type == EventTypeEnum.PUBLIC.value)).fetchall()
-        print("connection_events: ", connection_events)
+        connection_events = repository.get_by_user_id_and_type(
+            connection.user_id, EventTypeEnum.PUBLIC)
         events.extend(connection_events)
-    return get_events_list_from_rows(events)
+    session.commit()
+    return events
 
 
-def update_event(id: str, event: EventInputUpdate) -> ResponseSuccess[None]:
-    eventResult = session.execute(select(EventModel).where(
-        EventModel.id == event.id)).fetchall()
-    print("UPDATE: ", eventResult)
-
-    result = session.execute(events.update().where(events.c.id == event.id), {
-        "title": event.title,
-        "description": event.description,
-        "type": event.type.value,
-        "start_date": datetime.datetime.fromisoformat(event.start_date),
-        "end_date": datetime.datetime.fromisoformat(event.end_date)
-    })
-    return ResponseSuccess[None](status=201, message=str(result.rowcount) + " Row(s) updated", data=None)
+def update_event(id: str, event_to_update: EventInputUpdate) -> ResponseSuccess[None]:
+    event = map_event_input_to_entity(event_to_update)
+    event.user_id = id
+    event.type = event_to_update.type.value
+    event.id = event_to_update.id
+    repository = EventsRepository(session)
+    repository.update(event)
+    session.commit()
+    return ResponseSuccess[None](status=201, message="Updated", data=None)
 
 
 def delete_event(user_id: str, id: str) -> bool:
-    event = session.execute(
-        events.select().where(events.c.id == id)).fetchone()
+    repository = EventsRepository(session)
+    event = repository.get_by_id(id)
     if event and event.user_id == user_id:
-        result = session.execute(events.delete().where(events.c.id == id))
-        return result.rowcount > 0
+        repository.remove(event)
+        session.commit()
+        return True
+
     return False
