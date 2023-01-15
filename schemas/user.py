@@ -23,13 +23,7 @@ class User:
     created_at: str
 
 
-# TODO: by different user type return different obj
 def get_user(auth: str, id: str) -> User:
-    authorized_user_id = authorized_user(auth)
-    connections_query = select(Connection.id, Connection.status).filter(or_(Connection.target_user_id == authorized_user_id, Connection.source_user_id == authorized_user_id)
-                                                                        ).where(Connection.status == ConnectionStatus.connected).where(or_(Connection.target_user_id == id, Connection.source_user_id == id))
-    connections = session.execute(connections_query).fetchall()
-    print("FRIENDS: ", connections)
     return conn.execute(users.select().where(users.c.id == id)).fetchone()
 
 
@@ -47,7 +41,7 @@ async def create_user(user: UserInput) -> ResponseSuccess[None]:
 
 
 def update_user(id: str, first_name: str, last_name: str, email: str) -> ResponseSuccess[None]:
-    result = conn.execute(users.update().where(users.c.id == id), {  # TODO: DTO???
+    result = conn.execute(users.update().where(users.c.id == id), {
         "first_name": first_name,
         "last_name": last_name,
         "email": email,

@@ -22,9 +22,8 @@ class Response(typing.Generic[T]):
     message: str
 
 
+# PATTERN: SEPARATED INTERFACE
 # abstract base class for repository
-
-
 class EventsRepository(metaclass=abc.ABCMeta):
     """An interface to listing repository"""
 
@@ -43,5 +42,22 @@ class EventsRepository(metaclass=abc.ABCMeta):
         """Retrieves entity by its identity"""
         raise NotImplementedError()
 
-    def __getitem__(self, index) -> EventModel:
-        return self.get_by_id(index)
+    @abc.abstractmethod
+    def get_by_user_id(self, user_id):
+        """Retrieves entity by user identity"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _check_not_removed(self, entity):
+        """Checks if entity is removed"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_entity(self, instance, mapper_func):
+        """Gets entity from instance"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_entities(self, instances, mapper_func):
+        """Gets entities from instances"""
+        raise NotImplementedError()

@@ -10,8 +10,6 @@ from sqlalchemy import *
 from sqlalchemy.orm import *
 from enum import Enum
 
-from type.types import Response
-
 
 @strawberry.enum
 class ConnectionAction(Enum):
@@ -57,7 +55,6 @@ class NotConnectedUser:
     last_name: str
     email: str
     created_at: str
-    # shared_connections: typing.List[ConnectionBase]
 
 
 @strawberry.type
@@ -67,14 +64,11 @@ class ConnectedUser:
     last_name: str
     email: str
     created_at: str
-    # connections: typing.List[ConnectionBase] #TODO: add resolver for field
-    # events: typing.List[ConnectionBase] #TODO
 
 
 def get_conn_list_from_rows(rows) -> typing.List[ConnectionBase]:
     tab: typing.List[ConnectionBase] = []
     for row in rows:
-        print("ROW: ", row)
         conn_user: UserBase = row[0]
         tab.append(ConnectionBase(user_id=conn_user.id, created_at=conn_user.created_at, first_name=conn_user.first_name,
                    last_name=conn_user.last_name, id=row[1], connection_status=row[2]))

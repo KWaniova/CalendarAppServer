@@ -15,8 +15,9 @@ class ConnectionStatus(enum.IntEnum):
 
 class Connection(Base):
     __tablename__ = 'connections'
-
+    # PATTERN: Identity Field
     id = Column('id', String(40), primary_key=True)
+    # PATTERN: Foreign Key mapping
     source_user_id = Column('source_user_id', ForeignKey(
         "users.id", ondelete="CASCADE"), nullable=False)
     target_user_id = Column('target_user_id', ForeignKey(
