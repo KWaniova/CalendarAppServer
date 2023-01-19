@@ -2,6 +2,8 @@ import abc
 import typing
 import strawberry
 
+import sqlalchemy.orm as sa
+
 from models.index import Event as EventModel
 
 
@@ -23,9 +25,28 @@ class Response(typing.Generic[T]):
 
 
 # PATTERN: SEPARATED INTERFACE
+class BaseMapper:
+    @abc.abstractmethod
+    def map_to_model(self, row):
+        raise NotImplementedError()
+
+    def map_to_entity(self, entity):
+        raise NotImplementedError()
+
+
+class Resolver(metaclass=abc.ABCMeta):
+    def __init__(self):
+        pass
+
 # abstract base class for repository
-class EventsRepository(metaclass=abc.ABCMeta):
+
+
+class BaseRepository(metaclass=abc.ABCMeta):
     """An interface to listing repository"""
+    session = sa.Session
+    event_mapper = BaseMapper
+    # PATTERN: Identity Map
+    identity_map = {}
 
     @abc.abstractmethod
     def add(self, entity: EventModel):
@@ -40,11 +61,6 @@ class EventsRepository(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_by_id(id: str) -> EventModel:
         """Retrieves entity by its identity"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_by_user_id(self, user_id):
-        """Retrieves entity by user identity"""
         raise NotImplementedError()
 
     @abc.abstractmethod

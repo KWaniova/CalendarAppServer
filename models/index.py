@@ -8,4 +8,5 @@ from sqlalchemy.orm import Session
 
 
 Base.metadata.create_all(engine)
+# PATTERN: Unit of work - vol2
 session = Session(bind=engine)
