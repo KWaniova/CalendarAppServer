@@ -1,31 +1,43 @@
-Source: https://strawberry.rocks/docs
+# Calendar Application Backend
 
-System requirments to launch this app - python environment (python v3.8.x, conda or pip...)
+A full-stack calendar application backend developed as part of the **Design Patterns** course and **Individual Project** at *Jagiellonian University, 2023*. This project showcases advanced design patterns inspired by *Martin Fowler* and integrates modern backend technologies.
 
-To generate python virtual environment:
+This server supports the frontend available [here](https://github.com/KWaniova/CalendarOfEventsApp).
 
-```
+## Built With
+
+- **Strawberry** - GraphQL library for Python ([Documentation](https://strawberry.rocks/docs))
+- **SQLAlchemy** - ORM for database management
+- **SQLite** - Lightweight relational database
+
+## System Requirements
+
+To run this application, you need a Python environment (Python 3.8.x or higher) with either `conda` or `pip` for package management.
+
+### Setting Up the Python Virtual Environment
+
+To create and activate a virtual environment, and install required packages:
+
+```bash
 python -m venv virtualenv
 source virtualenv/bin/activate
-pip install cryptography
-pip install sqlalchemy 'fastapi[all]' 'uvicorn[standard]'
+pip install cryptography sqlalchemy 'fastapi[all]' 'uvicorn[standard]'
 pip install 'strawberry-graphql[debug-server]'
-
 ```
 
-=================================
-Serever build with Strawberry, SQLAchemy, SQLLite database
+## Starting the Server
 
-In requirements.txt are dependencies that we need in our project
+To start the server in development mode, run:
 
-To generate requirements and store in file:
-
-```
-pip freeze > file.txt
-```
-
-To start server:
-
-```
+```bash
 uvicorn main:app --reload
 ```
+
+This will launch the server with live reload enabled for development convenience.
+
+## Api Documentation
+
+GraphQL API documentation is available at `http://
+localhost:8000/graphql`.
+
+![graphql](images/api.png)
